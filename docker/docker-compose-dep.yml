@@ -1,11 +1,22 @@
 version: '3.8'
 services:
-  dynamodb-local:
-    image: amazon/dynamodb-local:latest
-    container_name: dynamodb-local
-    ports:
-      - "8000:8000"
-    mem_limit: 1024m
-    mem_reservation: 512m
-    cpus: 1
-    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
+    dynamodb-local:
+        image: amazon/dynamodb-local:latest
+        container_name: dynamodb-local
+        ports:
+            - "8000:8000"
+        mem_limit: 1024m
+        mem_reservation: 512m
+        cpus: 1
+        command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
+    web:
+        build:
+            context: ..
+        links:
+            - dynamodb-local
+        image: backend
+        container_name: backend
+        ports:
+            - "8080:8080"
+        depends_on:
+            - dynamodb-local

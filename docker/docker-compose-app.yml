@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+   web:
+    build:
+        context: ..
+    external_links:
+        - dynamodb-local
+    image: backend
+    extra_hosts:
+        - "oshost:192.168.10.144"
+    ports:
+        - "8080:8080"

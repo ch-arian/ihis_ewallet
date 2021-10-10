@@ -16,8 +16,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
-import com.ihis.ewallet.dtos.User;
-import com.ihis.ewallet.repo.TestUser;
+import com.ihis.ewallet.dtos.EWalletUser;
+import com.ihis.ewallet.dtos.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,27 +42,30 @@ public class DynamoDBConfig {
 		AmazonDynamoDB amazonDynamoDB = AmazonDynamoDBClientBuilder.standard()
 				.withEndpointConfiguration(
 						new AwsClientBuilder.EndpointConfiguration(amazonDynamoDBEndpoint, "ap-southeast-1"))
-				.withCredentials(amazonAWSCredentialsProvider())
-				.build();
-		
-		//create table
+				.withCredentials(amazonAWSCredentialsProvider()).build();
+
+		// create table
+		createTable(EWalletUser.class, amazonDynamoDB);
+		createTable(Transaction.class, amazonDynamoDB);
+		return amazonDynamoDB;
+	}
+
+	public <T> void createTable(Class<T> klass, AmazonDynamoDB amazonDynamoDB) {
 		DynamoDBMapper dynamoMapper = new DynamoDBMapper(amazonDynamoDB);
-		CreateTableRequest tableRequest = dynamoMapper.generateCreateTableRequest(TestUser.class);
-		tableRequest.setProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
-		
+		CreateTableRequest tableRequest = dynamoMapper.generateCreateTableRequest(klass);
+		tableRequest.setProvisionedThroughput(
+				new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
 		try {
 			amazonDynamoDB.createTable(tableRequest);
-		}catch(ResourceInUseException e) {
+		} catch (ResourceInUseException e) {
 			log.error("TestUser table existed");
 		}
-		
-		return amazonDynamoDB;
 	}
 
 	public AWSCredentialsProvider amazonAWSCredentialsProvider() {
 		return new AWSStaticCredentialsProvider(amazonAWSCredentials());
 	}
-	
+
 	@Bean
 	public AWSCredentials amazonAWSCredentials() {
 		return new BasicAWSCredentials(amazonAWSAccessKey, amazonAWSSecretKey);
